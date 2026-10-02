@@ -21,6 +21,7 @@ const techIconUrl = name => techIcons[name]
   : null
 
 const CONTACT_EMAIL = 'maximilianofallini@gmail.com'
+const FORM_SUBMIT_ENDPOINT = `https://formsubmit.co/ajax/${CONTACT_EMAIL}`
 const gmailCompose = ({ subject = '', body = '' } = {}) => {
   const params = new URLSearchParams({ view: 'cm', fs: '1', tf: '1', to: CONTACT_EMAIL })
   if (subject) params.set('su', subject)
@@ -573,7 +574,7 @@ function AssistantWidget({ open, onToggle, onClose, scrolled }) {
 
 function App() {
   const [menuOpen, setMenuOpen] = useState(false)
-  const [sent, setSent] = useState(false)
+  const [formStatus, setFormStatus] = useState('idle')
   const [scrolled, setScrolled] = useState(false)
   const [assistantOpen, setAssistantOpen] = useState(false)
   const roleLine1 = 'Desarrollador'
@@ -584,6 +585,30 @@ function App() {
   const introTail = ', desarrollador full-stack enfocado en crear software útil, interfaces con intención y herramientas que la gente disfruta usar.'
   const introFull = introLead + introName + introTail
   const [typedIntro, setTypedIntro] = useState(0)
+
+  const handleContactSubmit = async event => {
+    event.preventDefault()
+    const form = event.currentTarget
+    const formData = new FormData(form)
+    formData.append('_subject', `Nuevo mensaje desde el portfolio: ${formData.get('name')}`)
+    setFormStatus('sending')
+
+    try {
+      const response = await fetch(FORM_SUBMIT_ENDPOINT, {
+        method: 'POST',
+        headers: { Accept: 'application/json' },
+        body: formData,
+      })
+      const result = await response.json()
+      if (!response.ok || (result.success !== true && result.success !== 'true')) {
+        throw new Error('FormSubmit rejected the message')
+      }
+      form.reset()
+      setFormStatus('sent')
+    } catch {
+      setFormStatus('error')
+    }
+  }
 
   useEffect(() => {
     let timer
@@ -676,7 +701,7 @@ function App() {
 
       <section id="skills" className="skills section-grid section-pad"><div className="section-head"><div><p className="eyebrow">TECNOLOGÍAS</p><h2>Con qué<br /><em>trabajo.</em></h2></div><p className="section-note">Las herramientas que uso para llevar una idea desde el primer commit hasta producción.</p></div><div className="tech-viewport" aria-label="Carrusel infinito de tecnologías"><div className="tech-grid">{[...technologies, ...technologies].map(([name, icon, category], index) => <article className="tech-card" key={`${name}-${index}`}><div className="tech-icon"><img src={`https://cdn.jsdelivr.net/gh/devicons/devicon/icons/${icon}`} alt="" /></div><div><h3>{name}</h3><p>{category}</p></div><span className="tech-arrow">↗</span></article>)}</div></div></section>
 
-      <section id="contact" className="contact section-grid section-pad"><div className="contact-copy"><p className="eyebrow">CONTACTO</p><h2>Hablemos.</h2><ul className="contact-facts"><li><span>EMAIL</span><a href={gmailCompose({ subject: 'Contacto desde tu portafolio' })} target="_blank" rel="noreferrer">{CONTACT_EMAIL} <Arrow external /></a></li><li><span>UBICACIÓN</span><strong>Buenos Aires, Argentina</strong></li><li><span>RESPUESTA</span><strong>Menos de 24 h hábiles</strong></li><li><span>ASISTENTE</span><button type="button" onClick={() => setAssistantOpen(true)}>Preguntas frecuentes <Arrow /></button></li></ul><div className="socials"><a href="https://github.com/Maximiliano-Fallini" target="_blank" rel="noreferrer">GitHub <Arrow external /></a><a href="https://www.linkedin.com" target="_blank" rel="noreferrer">LinkedIn <Arrow external /></a></div></div><form className="contact-form" onSubmit={e => { e.preventDefault(); const data = new FormData(e.currentTarget); window.open(gmailCompose({ subject: `Proyecto nuevo — ${data.get('name')}`, body: `${data.get('message')}\n\nContacto: ${data.get('email')}` }), '_blank', 'noopener'); setSent(true) }}><label>NOMBRE <input required name="name" placeholder="Tu nombre" /></label><label>EMAIL <input required name="email" type="email" placeholder="tu@email.com" /></label><label>MENSAJE <textarea required name="message" rows="4" placeholder="Quiero una página web profesional" /></label><button className="button primary" type="submit">{sent ? 'Mensaje preparado ✓' : 'Enviar mensaje'} <Arrow /></button></form></section>
+      <section id="contact" className="contact section-grid section-pad"><div className="contact-copy"><p className="eyebrow">CONTACTO</p><h2>Hablemos.</h2><ul className="contact-facts"><li><span>EMAIL</span><a href={gmailCompose({ subject: 'Contacto desde tu portafolio' })} target="_blank" rel="noreferrer">{CONTACT_EMAIL} <Arrow external /></a></li><li><span>UBICACIÓN</span><strong>Buenos Aires, Argentina</strong></li><li><span>RESPUESTA</span><strong>Menos de 24 h hábiles</strong></li><li><span>ASISTENTE</span><button type="button" onClick={() => setAssistantOpen(true)}>Preguntas frecuentes <Arrow /></button></li></ul><div className="socials"><a href="https://github.com/Maximiliano-Fallini" target="_blank" rel="noreferrer">GitHub <Arrow external /></a><a href="https://www.linkedin.com" target="_blank" rel="noreferrer">LinkedIn <Arrow external /></a></div></div><form className="contact-form" action={FORM_SUBMIT_ENDPOINT} method="POST" onSubmit={handleContactSubmit}><label>NOMBRE <input required name="name" placeholder="Tu nombre" /></label><label>EMAIL <input required name="email" type="email" placeholder="tu@email.com" /></label><label>MENSAJE <textarea required name="message" rows="4" placeholder="Quiero una página web profesional" /></label>{formStatus !== 'idle' && <small role="status" aria-live="polite">{formStatus === 'sending' ? 'Enviando mensaje...' : formStatus === 'sent' ? 'Mensaje enviado. Gracias por escribirme.' : 'No se pudo enviar. Probá de nuevo o escribime por email.'}</small>}<button className="button primary" type="submit" disabled={formStatus === 'sending'}>{formStatus === 'sending' ? 'Enviando...' : formStatus === 'sent' ? 'Enviar otro mensaje' : 'Enviar mensaje'} <Arrow /></button></form></section>
     </main>
     <footer className="footer section-grid"><a className="logo" href="#top"><Mark /><span>MF<span className="muted">.dev</span></span></a><span>Diseñado y construido con intención.</span><span>© 2026 Maximiliano Fallini</span></footer>
   </>
