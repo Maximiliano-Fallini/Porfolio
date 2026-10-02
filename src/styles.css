@@ -126,12 +126,12 @@ a.profile-chip:focus-visible{outline:2px solid var(--green);outline-offset:3px}
 .assistant.is-open .assistant-panel{opacity:1;visibility:visible;transform:none;pointer-events:auto}
 .assistant-panel .chat{margin-bottom:0}
 .assistant-controls{position:relative}
-.assistant-fab{position:relative;width:76px;height:76px;padding:0;border:0;border-radius:50%;background:var(--green);display:grid;place-items:center;cursor:pointer;box-shadow:0 16px 38px -10px rgba(166,255,93,.55),0 8px 22px -8px rgba(0,0,0,.75);transition:transform .22s,box-shadow .22s}
-.assistant-fab:hover{transform:translateY(-3px) scale(1.05);box-shadow:0 20px 46px -10px rgba(166,255,93,.7),0 10px 26px -8px rgba(0,0,0,.8)}
+.assistant-fab{position:relative;width:76px;height:76px;padding:0;border:0;border-radius:50%;background:var(--green);display:grid;place-items:center;cursor:pointer;box-shadow:0 0 24px rgba(166,255,93,.56),0 0 50px rgba(166,255,93,.26);transition:transform .22s,box-shadow .22s}
+.assistant-fab:hover{transform:translateY(-3px) scale(1.05);box-shadow:0 0 30px rgba(166,255,93,.72),0 0 60px rgba(166,255,93,.34)}
 .assistant-fab:focus-visible{outline:2px solid var(--text);outline-offset:4px}
 .fab-icon{display:flex;align-items:center;justify-content:center;width:38px;height:38px;color:#0a1008}
 .fab-icon svg{display:block;width:100%;height:100%}
-.fab-bubble{position:absolute;right:0;bottom:calc(100% + 14px);display:grid;grid-template-columns:minmax(0,1fr) 30px;align-items:center;column-gap:8px;width:min(280px,calc(100vw - 36px));min-height:66px;padding:12px;background:#0b100e;color:var(--text);border:1px solid var(--green);border-radius:17px 17px 6px 17px;font:600 14px/1.4 Manrope,system-ui,sans-serif;letter-spacing:0;text-align:center;box-shadow:0 18px 40px -16px rgba(0,0,0,.95);transition:opacity .3s ease,transform .3s ease,visibility .3s;pointer-events:auto}
+.fab-bubble{position:fixed;right:24px;bottom:114px;display:grid;grid-template-columns:minmax(0,1fr) 30px;align-items:center;column-gap:8px;width:min(280px,calc(100vw - 36px));min-height:66px;padding:12px;background:#0b100e;color:var(--text);border:1px solid var(--green);border-radius:17px 17px 6px 17px;font:600 14px/1.4 Manrope,system-ui,sans-serif;letter-spacing:0;text-align:center;box-shadow:0 18px 40px -16px rgba(0,0,0,.95);transition:opacity .3s ease,transform .3s ease,visibility .3s;pointer-events:auto}
 .fab-bubble::after{content:"";position:absolute;right:31px;bottom:-7px;width:12px;height:12px;background:#0b100e;border-right:1px solid var(--green);border-bottom:1px solid var(--green);transform:rotate(45deg)}
 .fab-bubble>span{grid-column:1;grid-row:1;display:block;min-width:0;text-align:center;line-height:1.4;text-wrap:balance}
 .assistant.is-open .fab-bubble{opacity:0;visibility:hidden;transform:translateY(6px);pointer-events:none}
@@ -209,10 +209,10 @@ a.profile-chip:focus-visible{outline:2px solid var(--green);outline-offset:3px}
 .msg{max-width:94%;font-size:12px;line-height:1.55}
 .chat-chips{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;padding:10px;max-height:146px;overflow-y:auto;overscroll-behavior:contain}
 .chat-chips button{min-width:0;min-height:40px;padding:8px 6px;border-radius:8px;text-align:center;font-size:10px;line-height:1.35}
-.chat-chips button:last-child:nth-child(odd){grid-column:1/-1}
-.assistant-fab{width:66px;height:66px}
-.fab-icon{width:34px;height:34px}
-  .fab-bubble{width:min(260px,calc(100vw - 24px));min-height:62px;bottom:calc(100% + 12px);font-size:14px;padding:10px 12px}
+  .chat-chips button:last-child:nth-child(odd){grid-column:1/-1}
+  .assistant-fab{width:66px;height:66px}
+  .fab-icon{width:34px;height:34px}
+  .fab-bubble{right:max(12px,env(safe-area-inset-right));bottom:90px;bottom:calc(78px + max(12px,env(safe-area-inset-bottom)));width:min(260px,calc(100vw - 24px));min-height:62px;font-size:14px;padding:10px 12px}
   .bubble-close{width:30px;height:30px}
   .fab-bubble::after{right:26px}
 }
@@ -225,8 +225,8 @@ a.profile-chip:focus-visible{outline:2px solid var(--green);outline-offset:3px}
 .hero-role b{display:inline-flex;align-items:center;justify-content:center;font-size:.28em;line-height:1;padding:.2em .55em;margin:0;background:var(--green);color:#0a1008;border-radius:999px;box-shadow:0 0 22px rgba(166,255,93,.42);letter-spacing:.02em;white-space:nowrap;text-shadow:none}
 .hero-intro{text-shadow:0 2px 12px rgba(0,0,0,.78),0 0 14px rgba(166,255,93,.1)}
 .hero-intro strong{text-shadow:0 2px 12px rgba(0,0,0,.72),0 0 12px rgba(166,255,93,.08)}
-.button.github-button{background:#050705;border-color:rgba(172,190,181,.28);color:var(--text)}
-.button.github-button:hover{background:#0c120e;border-color:var(--green-dim);color:var(--green);transform:translateY(-2px)}
+.button.contact-button{background:#050705;border-color:rgba(172,190,181,.28);color:var(--text)}
+.button.contact-button:hover{background:#0c120e;border-color:var(--green-dim);color:var(--green);transform:translateY(-2px)}
 @media(max-width:760px){
   .hero h1.hero-role{font-size:clamp(30px,8.8vw,54px);align-items:center;text-align:center}
   .hero-role-bottom{justify-content:center}
@@ -454,3 +454,30 @@ a.profile-chip:hover{border-color:transparent}
 .hero h1.hero-role{animation:none}
 .project-info>p{font-size:15px}
 @media(max-width:760px){.project-info>p{font-size:15px}}
+
+/* Custom page scrollbar; native scrolling and keyboard navigation remain intact */
+html{scrollbar-width:thin;scrollbar-color:#8fd653 #070a09}
+html::-webkit-scrollbar{width:9px;height:9px}
+html::-webkit-scrollbar-track{background:#070a09}
+html::-webkit-scrollbar-thumb{min-height:34px;background:linear-gradient(180deg,#b9ff84,#6f9f46);border:2px solid #070a09;border-radius:999px}
+html::-webkit-scrollbar-thumb:hover{background:linear-gradient(180deg,#d4ffb2,#91d957)}
+html::-webkit-scrollbar-corner{background:#070a09}
+
+/* Cursor-following gradient on tech-card borders only */
+.tech-card{overflow:hidden}
+.tech-card:hover{border-color:transparent;background:rgba(12,17,14,.7)}
+.tech-card::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  z-index:4;
+  padding:2px;
+  pointer-events:none;
+  opacity:var(--spot-opacity,0);
+  transition:opacity .35s ease;
+  background:radial-gradient(220px circle at var(--spot-x,50%) var(--spot-y,50%),#d6ffab,var(--green) 30%,rgba(166,255,93,.55) 55%,transparent 72%);
+  -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);
+  -webkit-mask-composite:xor;
+  mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);
+  mask-composite:exclude;
+}

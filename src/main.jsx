@@ -32,18 +32,6 @@ const gmailCompose = ({ subject = '', body = '' } = {}) => {
 const projects = [
   {
     number: '01',
-    type: 'Producto · Windows',
-    title: 'WinForge',
-    description: 'Optimizador competitivo para Windows que reúne monitoreo en vivo, modo juego, biblioteca multiplataforma y herramientas de sistema en una sola app.',
-    stack: ['C#', '.NET', 'PowerShell'],
-    github: 'https://github.com/Maximiliano-Fallini/WinForge',
-    demo: 'https://github.com/Maximiliano-Fallini/WinForge/releases',
-    linkLabel: 'Repositorio',
-    image: asset('winforge.png'),
-    accent: 'green',
-  },
-  {
-    number: '02',
     type: 'Web · Landing',
     title: 'Miriam Elisabet Brito',
     description: 'Página clara y cálida para una profesional de terapias holísticas, con servicios, cursos, trabajos realizados y contacto directo.',
@@ -53,6 +41,18 @@ const projects = [
     linkLabel: 'Página web',
     image: asset('miriam.webp'),
     accent: 'sand',
+  },
+  {
+    number: '02',
+    type: 'Aplicación · Windows',
+    title: 'WinForge',
+    description: 'Optimizador competitivo para Windows que reúne monitoreo en vivo, modo juego, biblioteca multiplataforma y herramientas de sistema en una sola app.',
+    stack: ['C#', '.NET', 'PowerShell'],
+    github: 'https://github.com/Maximiliano-Fallini/WinForge',
+    demo: 'https://github.com/Maximiliano-Fallini/WinForge/releases',
+    linkLabel: 'Repositorio',
+    image: asset('winforge.png'),
+    accent: 'green',
   },
 ]
 
@@ -122,7 +122,7 @@ function SpotlightCard({ className = '', children, ...rest }) {
 function SpotlightSeparators() {
   useEffect(() => {
     const lines = document.querySelectorAll('.nav-wrap, .hero-footer, .footer')
-    const fields = document.querySelectorAll('.contact-form label, .profile-chip')
+    const fields = document.querySelectorAll('.contact-form label, .profile-chip, .tech-card')
     if (!lines.length && !fields.length) return undefined
     const track = e => {
       lines.forEach(el => {
@@ -177,6 +177,7 @@ function ParticleField() {
       const radiusX = Math.min(width * .38, 320)
       const radiusY = Math.min(height * .28, 210)
       const spacing = 20
+      const isMobile = width <= 760
 
       for (let y = 0; y <= height; y += spacing) {
         for (let x = 0; x <= width; x += spacing) {
@@ -189,8 +190,8 @@ function ParticleField() {
           const red = Math.round(5 + 161 * response)
           const green = Math.min(255, Math.round(118 + 112 * response + 22 * field))
           const blue = Math.round(98 - 24 * response + 8 * field)
-          const alpha = .04 + field * .2 + response * .62
-          const halfSize = 1.7 + field * .45 + response * 1.45
+          const alpha = .04 + field * (isMobile ? .32 : .2) + response * .62
+          const halfSize = 1.7 + field * (isMobile ? .7 : .45) + response * 1.45
 
           ctx.beginPath()
           ctx.moveTo(x - halfSize, y - halfSize)
@@ -200,7 +201,7 @@ function ParticleField() {
           ctx.strokeStyle = `rgba(${red},${green},${blue},${alpha})`
           ctx.lineWidth = 1 + field * .2 + response * 1
           ctx.lineCap = 'round'
-          ctx.shadowBlur = response > .08 ? response * 6 : 0
+          ctx.shadowBlur = response > .08 ? response * 6 : isMobile ? field * 3 : 0
           ctx.shadowColor = 'rgba(166,255,93,.7)'
           ctx.stroke()
         }
@@ -520,7 +521,7 @@ function FaqChat({ onClose }) {
 
 // Floating assistant, WhatsApp-style. It lives outside the contact section so
 // the FAQ is reachable from anywhere on the page.
-function AssistantWidget({ open, onToggle, onClose, scrolled }) {
+function AssistantWidget({ open, onToggle, onClose }) {
   const [showBubble, setShowBubble] = useState(true)
 
   useEffect(() => {
@@ -543,7 +544,7 @@ function AssistantWidget({ open, onToggle, onClose, scrolled }) {
         <FaqChat onClose={onClose} />
       </div>
       <div className="assistant-controls">
-        {showBubble && !scrolled && <div className="fab-bubble">
+        {showBubble && <div className="fab-bubble">
           <span>¿Tenés alguna consulta?</span>
           <button type="button" className="bubble-close" aria-label="Ocultar ayuda" onClick={() => setShowBubble(false)}>×</button>
         </div>}
@@ -581,8 +582,8 @@ function App() {
   const roleLine2 = 'Web'
   const roleBadge = 'Full-Stack'
   const introLead = 'Soy '
-  const introName = 'Maximiliano Fallini'
-  const introTail = ', desarrollador full-stack enfocado en crear software útil, interfaces con intención y herramientas que la gente disfruta usar.'
+  const introName = 'Maximiliano Fallini.'
+  const introTail = ' Ayudo a personas y negocios a convertir sus ideas en páginas y aplicaciones web claras, fáciles de usar y pensadas para sus clientes.'
   const introFull = introLead + introName + introTail
   const [typedIntro, setTypedIntro] = useState(0)
 
@@ -668,7 +669,7 @@ function App() {
     <ParticleField />
     <SpotlightSeparators />
     <div className="noise" />
-    <AssistantWidget open={assistantOpen} onToggle={() => setAssistantOpen(o => !o)} onClose={() => setAssistantOpen(false)} scrolled={scrolled} />
+    <AssistantWidget open={assistantOpen} onToggle={() => setAssistantOpen(o => !o)} onClose={() => setAssistantOpen(false)} />
     <header className={scrolled ? 'nav-shell is-scrolled' : 'nav-shell'}><div className="nav-wrap">
       <a className="logo" href="#top" onClick={() => setMenuOpen(false)}><Mark /><span>MF<span className="muted">.dev</span></span></a>
       <button className="menu" onClick={() => setMenuOpen(!menuOpen)} aria-label="Abrir menú">{menuOpen ? 'CERRAR' : 'MENÚ'} <span>+</span></button>
@@ -691,7 +692,7 @@ function App() {
           <p className="hero-intro" aria-label={introFull}>
             {introLead.slice(0, introLeadCount)}<strong>{introName.slice(0, introNameCount)}</strong>{introTail.slice(0, introTailCount)}{introCaret && <span className="typing-caret" aria-hidden="true">|</span>}
           </p>
-          <div className="hero-actions"><a className="button primary" href="#work">Explorar proyectos <Arrow /></a><a className="button github-button" href="https://github.com/Maximiliano-Fallini" target="_blank" rel="noreferrer">GitHub <Arrow external /></a></div>
+          <div className="hero-actions"><a className="button primary" href="#work">Explorar proyectos <Arrow /></a><a className="button contact-button" href="#contact">Contacto <Arrow /></a></div>
         </div>
         <div className="hero-aside"><a className="profile-chip" href="https://github.com/Maximiliano-Fallini" target="_blank" rel="noreferrer" aria-label="Ver GitHub de Maximiliano Fallini"><img src={asset('github-avatar.jpg')} alt="Avatar de Maximiliano Fallini" /><span>Maximiliano Fallini<br /><small>Buenos Aires, Argentina</small></span></a><Vscode3D /></div>
         <div className="hero-footer"><span>DESLIZÁ PARA EXPLORAR <b>↓</b></span></div>
