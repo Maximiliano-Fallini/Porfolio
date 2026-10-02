@@ -5,6 +5,8 @@ import { SVGLoader } from 'three/addons/loaders/SVGLoader.js'
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js'
 import './styles.css'
 
+const asset = path => `${import.meta.env.BASE_URL}${path}`
+
 const techIcons = {
   'C#': 'csharp/csharp-original.svg',
   '.NET': 'dotnetcore/dotnetcore-original.svg',
@@ -36,7 +38,7 @@ const projects = [
     github: 'https://github.com/Maximiliano-Fallini/WinForge',
     demo: 'https://github.com/Maximiliano-Fallini/WinForge/releases',
     linkLabel: 'Repositorio',
-    image: '/winforge.png',
+    image: asset('winforge.png'),
     accent: 'green',
   },
   {
@@ -48,7 +50,7 @@ const projects = [
     github: 'https://miriamelisabetbrito.com.ar',
     demo: 'https://miriamelisabetbrito.com.ar',
     linkLabel: 'Página web',
-    image: '/miriam.webp',
+    image: asset('miriam.webp'),
     accent: 'sand',
   },
 ]
@@ -73,7 +75,7 @@ const technologies = [
 
 
 function Arrow({ external = false }) { return <span className="arrow" aria-hidden="true">{external ? '↗' : '→'}</span> }
-function Mark() { return <img className="mark" src="/logo.svg?v=2" alt="" aria-hidden="true" /> }
+function Mark() { return <img className="mark" src={asset('logo.svg?v=2')} alt="" aria-hidden="true" /> }
 
 // Cursor-following spotlight card. Adapted from the 21st.dev "Spotlight Card"
 // (GlowCard) pattern, but written with CSS custom properties instead of React
@@ -666,7 +668,7 @@ function App() {
           </p>
           <div className="hero-actions"><a className="button primary" href="#work">Explorar proyectos <Arrow /></a><a className="button github-button" href="https://github.com/Maximiliano-Fallini" target="_blank" rel="noreferrer">GitHub <Arrow external /></a></div>
         </div>
-        <div className="hero-aside"><a className="profile-chip" href="https://github.com/Maximiliano-Fallini" target="_blank" rel="noreferrer" aria-label="Ver GitHub de Maximiliano Fallini"><img src="/github-avatar.jpg" alt="Avatar de Maximiliano Fallini" /><span>Maximiliano Fallini<br /><small>Buenos Aires, Argentina</small></span></a><Vscode3D /></div>
+        <div className="hero-aside"><a className="profile-chip" href="https://github.com/Maximiliano-Fallini" target="_blank" rel="noreferrer" aria-label="Ver GitHub de Maximiliano Fallini"><img src={asset('github-avatar.jpg')} alt="Avatar de Maximiliano Fallini" /><span>Maximiliano Fallini<br /><small>Buenos Aires, Argentina</small></span></a><Vscode3D /></div>
         <div className="hero-footer"><span>DESLIZÁ PARA EXPLORAR <b>↓</b></span></div>
       </section>
 
