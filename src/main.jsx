@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { createRoot } from 'react-dom/client'
 import * as THREE from 'three'
 import { SVGLoader } from 'three/addons/loaders/SVGLoader.js'
@@ -156,6 +156,36 @@ function SpotlightSeparators() {
   return null
 }
 
+function ScrollProgress() {
+  const progressRef = useRef(null)
+
+  useEffect(() => {
+    const bar = progressRef.current
+    if (!bar) return undefined
+
+    let frame = 0
+    const update = () => {
+      if (frame) window.cancelAnimationFrame(frame)
+      frame = window.requestAnimationFrame(() => {
+        const maxScroll = document.documentElement.scrollHeight - window.innerHeight
+        const progress = maxScroll > 0 ? Math.min(1, window.scrollY / maxScroll) : 0
+        bar.style.transform = `scaleX(${progress})`
+      })
+    }
+
+    window.addEventListener('scroll', update, { passive: true })
+    window.addEventListener('resize', update)
+    update()
+    return () => {
+      window.removeEventListener('scroll', update)
+      window.removeEventListener('resize', update)
+      if (frame) window.cancelAnimationFrame(frame)
+    }
+  }, [])
+
+  return <div className="scroll-progress" aria-hidden="true"><span ref={progressRef} /></div>
+}
+
 function ParticleField() {
   const canvasRef = useRef(null)
   const mouse = useRef({ x: -1000, y: -1000 })
@@ -168,8 +198,10 @@ function ParticleField() {
     let width = 0
     let height = 0
     let frame = 0
+    let waveFrame = 0
+    const waveStart = performance.now() + 3500
 
-    const draw = () => {
+    const draw = now => {
       frame = 0
       ctx.clearRect(0, 0, width, height)
       const centerX = width / 2
@@ -185,7 +217,12 @@ function ParticleField() {
           const dy = (y - centerY) / radiusY
           const field = Math.max(0, 1 - Math.hypot(dx, dy))
           const pointerDistance = Math.hypot(mouse.current.x - x, mouse.current.y - y)
-          const response = Math.max(0, 1 - pointerDistance / 260)
+          const pointerResponse = Math.max(0, 1 - pointerDistance / 260)
+          const waveElapsed = now - waveStart
+          const waveRadius = Math.max(0, waveElapsed * .45)
+          const distanceFromCenter = Math.hypot(x - centerX, y - centerY)
+          const waveResponse = waveElapsed > 0 ? Math.max(0, 1 - Math.abs(distanceFromCenter - waveRadius) / 86) : 0
+          const response = Math.max(pointerResponse, waveResponse)
           if (field < .015 && response < .025) continue
           const red = Math.round(5 + 161 * response)
           const green = Math.min(255, Math.round(118 + 112 * response + 22 * field))
@@ -210,7 +247,7 @@ function ParticleField() {
     }
 
     const scheduleDraw = () => {
-      if (!frame) frame = requestAnimationFrame(draw)
+      if (!frame) frame = requestAnimationFrame(now => draw(now))
     }
     const resize = () => {
       const ratio = Math.min(window.devicePixelRatio || 1, 2)
@@ -233,11 +270,21 @@ function ParticleField() {
     }
 
     resize()
+    const animateWave = now => {
+      if (now < waveStart + 2600) {
+        draw(now)
+        waveFrame = requestAnimationFrame(animateWave)
+      } else {
+        draw(now)
+      }
+    }
+    waveFrame = requestAnimationFrame(animateWave)
     window.addEventListener('resize', resize)
     window.addEventListener('pointermove', move, { passive: true })
     window.addEventListener('pointerleave', leave)
     return () => {
       cancelAnimationFrame(frame)
+      cancelAnimationFrame(waveFrame)
       window.removeEventListener('resize', resize)
       window.removeEventListener('pointermove', move)
       window.removeEventListener('pointerleave', leave)
@@ -573,6 +620,69 @@ function AssistantWidget({ open, onToggle, onClose }) {
   )
 }
 
+function LoadingScreen() {
+  const [progress, setProgress] = useState(0)
+  const [leaving, setLeaving] = useState(false)
+  useEffect(() => {
+    let frame = 0
+    let finishTimer
+    let removeTimer
+    const startedAt = performance.now()
+    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    let ready = document.readyState === 'complete'
+
+    const markReady = () => { ready = true }
+    if (!ready) window.addEventListener('load', markReady, { once: true })
+    if (document.fonts?.ready) document.fonts.ready.then(markReady)
+
+    const tick = now => {
+      const elapsed = now - startedAt
+      const minimumDuration = 3500
+      const timeProgress = Math.min(1, elapsed / minimumDuration)
+      const canFinish = ready && elapsed >= minimumDuration
+      const next = canFinish ? 100 : Math.min(99, Math.round(timeProgress * 99))
+      setProgress(current => Math.max(current, next))
+
+      if (canFinish) {
+        setProgress(100)
+        finishTimer = window.setTimeout(() => {
+          setLeaving(true)
+          document.body.classList.add('page-ready')
+          window.dispatchEvent(new Event('portfolio-ready'))
+        }, reducedMotion ? 80 : 260)
+        removeTimer = window.setTimeout(() => {
+          document.body.classList.remove('is-loading')
+        }, reducedMotion ? 160 : 720)
+        return
+      }
+      frame = window.requestAnimationFrame(tick)
+    }
+
+    document.body.classList.add('is-loading')
+    frame = window.requestAnimationFrame(tick)
+    return () => {
+      window.removeEventListener('load', markReady)
+      window.cancelAnimationFrame(frame)
+      window.clearTimeout(finishTimer)
+      window.clearTimeout(removeTimer)
+      document.body.classList.remove('is-loading')
+      document.body.classList.remove('page-ready')
+    }
+  }, [])
+
+  return (
+    <div className={`loading-screen${leaving ? ' is-leaving' : ''}`} role="status" aria-live="polite" aria-label={`Cargando portfolio, ${progress}%`}>
+      <ParticleField />
+      <div className="loading-center">
+        <span className="loading-kicker">MF.DEV / PORTFOLIO</span>
+        <strong className="loading-percent">{String(progress).padStart(2, '0')}<small>%</small></strong>
+        <div className="loading-track" aria-hidden="true"><span style={{ width: `${progress}%` }} /></div>
+        <span className="loading-caption">LOADING...</span>
+      </div>
+    </div>
+  )
+}
+
 function App() {
   const [menuOpen, setMenuOpen] = useState(false)
   const [formStatus, setFormStatus] = useState('idle')
@@ -586,6 +696,7 @@ function App() {
   const introTail = ' Ayudo a personas y negocios a convertir sus ideas en páginas y aplicaciones web claras, fáciles de usar y pensadas para sus clientes.'
   const introFull = introLead + introName + introTail
   const [typedIntro, setTypedIntro] = useState(0)
+  const [canTypeIntro, setCanTypeIntro] = useState(false)
 
   const handleContactSubmit = async event => {
     event.preventDefault()
@@ -612,6 +723,14 @@ function App() {
   }
 
   useEffect(() => {
+    const unlockIntro = () => setCanTypeIntro(true)
+    if (document.body.classList.contains('page-ready')) unlockIntro()
+    window.addEventListener('portfolio-ready', unlockIntro)
+    return () => window.removeEventListener('portfolio-ready', unlockIntro)
+  }, [])
+
+  useEffect(() => {
+    if (!canTypeIntro) return undefined
     let timer
     let introIndex = 0
     const typeIntro = () => {
@@ -625,13 +744,34 @@ function App() {
     }
     timer = window.setTimeout(typeIntro, 300)
     return () => window.clearTimeout(timer)
-  }, [introFull])
+  }, [introFull, canTypeIntro])
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 8)
     onScroll()
     window.addEventListener('scroll', onScroll, { passive: true })
     return () => window.removeEventListener('scroll', onScroll)
+  }, [])
+
+  useLayoutEffect(() => {
+    if (!('IntersectionObserver' in window)) return undefined
+
+    const targets = document.querySelectorAll('.work .section-head, .project-card, .skills .section-head, .tech-card, .contact-copy, .contact-form')
+    const observer = new IntersectionObserver(entries => {
+      entries.forEach(entry => {
+        if (!entry.isIntersecting) return
+        entry.target.classList.add('is-revealed')
+        observer.unobserve(entry.target)
+      })
+    }, { threshold: .08, rootMargin: '0px 0px -32px 0px' })
+
+    targets.forEach((element, index) => {
+      element.classList.add('scroll-reveal')
+      element.style.setProperty('--reveal-delay', `${(index % 4) * 65}ms`)
+      observer.observe(element)
+    })
+
+    return () => observer.disconnect()
   }, [])
 
   // Custom anchor scrolling: land on the section heading rather than the top
@@ -666,6 +806,8 @@ function App() {
   const introCaret = typedIntro > 0
 
   return <>
+    <LoadingScreen />
+    <ScrollProgress />
     <ParticleField />
     <SpotlightSeparators />
     <div className="noise" />
