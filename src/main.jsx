@@ -32,7 +32,7 @@ const gmailCompose = ({ subject = '', body = '' } = {}) => {
 const projects = [
   {
     number: '01',
-    type: 'Web · Landing',
+    type: 'Página web · Landing',
     title: 'Miriam Elisabet Brito',
     description: 'Página clara y cálida para una profesional de terapias holísticas, con servicios, cursos, trabajos realizados y contacto directo.',
     stack: ['HTML', 'CSS', 'JavaScript'],
