@@ -297,6 +297,7 @@ a.profile-chip:focus-visible{outline:2px solid var(--green);outline-offset:3px}
 .contact-form label:hover input::placeholder,.contact-form label:hover textarea::placeholder{
   color:rgba(233,240,236,.82);
 }
+.contact-form .form-honeypot{position:absolute!important;left:-10000px!important;width:1px!important;height:1px!important;overflow:hidden!important;opacity:0!important;pointer-events:none!important}
 
 
 /* Cursor-following project-card edge effect for contact fields */

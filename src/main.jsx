@@ -686,6 +686,8 @@ function LoadingScreen() {
 function App() {
   const [menuOpen, setMenuOpen] = useState(false)
   const [formStatus, setFormStatus] = useState('idle')
+  const [fallbackEmailUrl, setFallbackEmailUrl] = useState('')
+  const [cooldown, setCooldown] = useState(0)
   const [scrolled, setScrolled] = useState(false)
   const [assistantOpen, setAssistantOpen] = useState(false)
   const roleLine1 = 'Desarrollador'
@@ -702,7 +704,20 @@ function App() {
     event.preventDefault()
     const form = event.currentTarget
     const formData = new FormData(form)
+    if (formData.get('_honey')) return
+    const lastSubmit = Number(window.localStorage.getItem('portfolio-contact-last-submit') || 0)
+    const remaining = Math.ceil((30000 - (Date.now() - lastSubmit)) / 1000)
+    if (remaining > 0) {
+      setCooldown(remaining)
+      setFormStatus('cooldown')
+      return
+    }
+    window.localStorage.setItem('portfolio-contact-last-submit', String(Date.now()))
     formData.append('_subject', `Nuevo mensaje desde el portfolio: ${formData.get('name')}`)
+    setFallbackEmailUrl(gmailCompose({
+      subject: `Contacto desde el portfolio: ${formData.get('name')}`,
+      body: `Nombre: ${formData.get('name')}\nEmail: ${formData.get('email')}\n\n${formData.get('message')}`,
+    }))
     setFormStatus('sending')
 
     try {
@@ -711,16 +726,23 @@ function App() {
         headers: { Accept: 'application/json' },
         body: formData,
       })
-      const result = await response.json()
+      const result = await response.json().catch(() => ({}))
       if (!response.ok || (result.success !== true && result.success !== 'true')) {
         throw new Error('FormSubmit rejected the message')
       }
       form.reset()
+      setFallbackEmailUrl('')
       setFormStatus('sent')
     } catch {
-      setFormStatus('error')
+      setFormStatus('fallback')
     }
   }
+
+  useEffect(() => {
+    if (!cooldown) return undefined
+    const timer = window.setInterval(() => setCooldown(value => Math.max(0, value - 1)), 1000)
+    return () => window.clearInterval(timer)
+  }, [cooldown])
 
   useEffect(() => {
     const unlockIntro = () => setCanTypeIntro(true)
@@ -844,7 +866,7 @@ function App() {
 
       <section id="skills" className="skills section-grid section-pad"><div className="section-head"><div><p className="eyebrow">TECNOLOGÍAS</p><h2>Con qué<br /><em>trabajo.</em></h2></div><p className="section-note">Las herramientas que uso para llevar una idea desde el primer commit hasta producción.</p></div><div className="tech-viewport" aria-label="Carrusel infinito de tecnologías"><div className="tech-grid">{[...technologies, ...technologies].map(([name, icon, category], index) => <article className="tech-card" key={`${name}-${index}`}><div className="tech-icon"><img src={`https://cdn.jsdelivr.net/gh/devicons/devicon/icons/${icon}`} alt="" /></div><div><h3>{name}</h3><p>{category}</p></div><span className="tech-arrow">↗</span></article>)}</div></div></section>
 
-      <section id="contact" className="contact section-grid section-pad"><div className="contact-copy"><p className="eyebrow">CONTACTO</p><h2>Hablemos.</h2><ul className="contact-facts"><li><span>EMAIL</span><a href={gmailCompose({ subject: 'Contacto desde tu portafolio' })} target="_blank" rel="noreferrer">{CONTACT_EMAIL} <Arrow external /></a></li><li><span>UBICACIÓN</span><strong>Buenos Aires, Argentina</strong></li><li><span>RESPUESTA</span><strong>Menos de 24 h hábiles</strong></li><li><span>ASISTENTE</span><button type="button" onClick={() => setAssistantOpen(true)}>Preguntas frecuentes <Arrow /></button></li></ul><div className="socials"><a href="https://github.com/Maximiliano-Fallini" target="_blank" rel="noreferrer">GitHub <Arrow external /></a><a href="https://www.linkedin.com" target="_blank" rel="noreferrer">LinkedIn <Arrow external /></a></div></div><form id="contact-form" className="contact-form" action={FORM_SUBMIT_ENDPOINT} method="POST" onSubmit={handleContactSubmit}><label>NOMBRE <input required name="name" placeholder="Tu nombre" /></label><label>EMAIL <input required name="email" type="email" placeholder="tu@email.com" /></label><label>MENSAJE <textarea required name="message" rows="4" placeholder="Quiero una página web profesional" /></label>{formStatus !== 'idle' && <small role="status" aria-live="polite">{formStatus === 'sending' ? 'Enviando mensaje...' : formStatus === 'sent' ? 'Mensaje enviado. Gracias por escribirme.' : 'No se pudo enviar. Probá de nuevo o escribime por email.'}</small>}<button className="button primary" type="submit" disabled={formStatus === 'sending'}>{formStatus === 'sending' ? 'Enviando...' : formStatus === 'sent' ? 'Enviar otro mensaje' : 'Enviar mensaje'} <Arrow /></button></form></section>
+      <section id="contact" className="contact section-grid section-pad"><div className="contact-copy"><p className="eyebrow">CONTACTO</p><h2>Hablemos.</h2><ul className="contact-facts"><li><span>EMAIL</span><a href={gmailCompose({ subject: 'Contacto desde tu portafolio' })} target="_blank" rel="noreferrer">{CONTACT_EMAIL} <Arrow external /></a></li><li><span>UBICACIÓN</span><strong>Buenos Aires, Argentina</strong></li><li><span>RESPUESTA</span><strong>Menos de 24 h hábiles</strong></li><li><span>ASISTENTE</span><button type="button" onClick={() => setAssistantOpen(true)}>Preguntas frecuentes <Arrow /></button></li></ul><div className="socials"><a href="https://github.com/Maximiliano-Fallini" target="_blank" rel="noreferrer">GitHub <Arrow external /></a><a href="https://www.linkedin.com" target="_blank" rel="noreferrer">LinkedIn <Arrow external /></a></div></div><form id="contact-form" className="contact-form" action={FORM_SUBMIT_ENDPOINT} method="POST" onSubmit={handleContactSubmit}><label className="form-honeypot" aria-hidden="true">SITIO WEB <input name="_honey" tabIndex="-1" autoComplete="off" /></label><label>NOMBRE <input required name="name" placeholder="Tu nombre" /></label><label>EMAIL <input required name="email" type="email" placeholder="tu@email.com" /></label><label>MENSAJE <textarea required name="message" rows="4" placeholder="Quiero una página web profesional" /></label>{formStatus !== 'idle' && <small role="status" aria-live="polite">{formStatus === 'sending' ? 'Enviando mensaje...' : formStatus === 'sent' ? 'Mensaje enviado. Gracias por escribirme.' : formStatus === 'cooldown' ? `Esperá ${cooldown} segundos antes de volver a enviar.` : <>No se pudo enviar automáticamente. <a href={fallbackEmailUrl} target="_blank" rel="noreferrer">Abrir Gmail con el mensaje preparado</a>.</>}</small>}<button className="button primary" type="submit" disabled={formStatus === 'sending' || cooldown > 0}>{formStatus === 'sending' ? 'Enviando...' : cooldown > 0 ? `Esperá ${cooldown}s` : formStatus === 'sent' ? 'Enviar otro mensaje' : 'Enviar mensaje'} <Arrow /></button></form></section>
     </main>
     <footer className="footer section-grid"><a className="logo" href="#top"><Mark /><span>MF<span className="muted">.dev</span></span></a><span>Diseñado y construido con intención.</span><span>© 2026 Maximiliano Fallini</span></footer>
   </>
